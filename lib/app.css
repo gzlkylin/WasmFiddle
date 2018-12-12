@@ -42,6 +42,12 @@ html, body {
   align-self: center;
 }
 
+.gv {
+  display: grid;
+  height: 100%;
+  width: 100%;
+}
+
 .gV2 {
   display: grid;
   height: 100%;

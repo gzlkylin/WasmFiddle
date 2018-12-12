@@ -237,7 +237,7 @@ export class AppComponent extends React.Component<any, {
     } else {
       this.loadFiddledState({
         editors: {
-          "main": "int main() { \n  return 42;\n}",
+          "main": "int main() { \n  return 4222;\n}",
           "harness": defaultHarnessText
         }
       });
@@ -455,9 +455,10 @@ export class AppComponent extends React.Component<any, {
     State.sendAppEvent("compile", "To Wasm");
     let self = this;
     src = encodeURIComponent(src).replace('%20', '+');
+    // 通过action来区分是C代码还是C++代码
     let action = this.state.isC ? "c2wast" : "cpp2wast";
     let compilerVersion = this.state.compilerVersion;
-    options = encodeURIComponent(options);
+    options = encodeURIComponent(this.state.isC ? options : '-O3 -std=c++17');
     self.setState({ isCompiling: true } as any);
     State.sendRequest("input=" + src + "&action=" + action + "&version=" + compilerVersion + "&options=" + options, function () {
       self.setState({ isCompiling: false } as any);
@@ -552,6 +553,10 @@ export class AppComponent extends React.Component<any, {
   downloadLink: HTMLAnchorElement = null;
   onViewChanged(e: any) {
     this.setState({ view: e.target.value } as any);
+  }
+  // 语言模式切换触发的回调函数
+  onLanguageModeChanged(e: any) {
+    this.setState({isC: e.target.value === 'C' ? true : false})
   }
   render(): any {
     if (this.viewEditor) {
@@ -678,45 +683,45 @@ export class AppComponent extends React.Component<any, {
           {window.location.origin + window.location.pathname + '?' + State.fiddleURI}
         </div>
         <div className="gShareButton">
+          {/* 去掉不需要的按钮，注释的为源代码 */}
           <a title="Build: CTRL + Shift + Return" onClick={this.build.bind(this)}><i className={"fa fa-cog " + (this.state.isCompiling ? "fa-spin" : "") + " fa-lg"} aria-hidden="true"></i></a>{' '}
-          <a className={this.wasmCode ? "" : "disabled-link"} title="Run: CTRL + Return" onClick={this.runHarness.bind(this)}><i className="fa fa-play-circle fa-lg" aria-hidden="true"></i></a>{' '}
-          <a title="Toggle Settings" onClick={this.toggleSettings.bind(this)}><i className="fa fa-wrench fa-lg" aria-hidden="true"></i></a>{' '}
+          {/* <a className={this.wasmCode ? "" : "disabled-link"} title="Run: CTRL + Return" onClick={this.runHarness.bind(this)}><i className="fa fa-play-circle fa-lg" aria-hidden="true"></i></a>{' '}
+          <a title="Toggle Settings" onClick={this.toggleSettings.bind(this)}><i className="fa fa-wrench fa-lg" aria-hidden="true"></i></a>{' '} */}
           <a title="Toggle Help" onClick={this.toggleHelp.bind(this)}><i className="fa fa-book fa-lg" aria-hidden="true"></i></a>{' '}
-          <i title="Share" onClick={this.share.bind(this)} className="fa fa-cloud-upload fa-lg" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div>
-        <div className="gV2">
-          <div>
-            <div className="editorHeader"><span className="editorHeaderTitle">{this.state.isC ? "C" : "C++"}</span>
-              <div className="editorHeaderButtons">
-                <a title="Build: CTRL + Shift + Return" onClick={this.build.bind(this)}>Build <i className={"fa fa-cog " + (this.state.isCompiling ? "fa-spin" : "") + " fa-lg"} aria-hidden="true"></i></a>{' '}
-                <a className={this.wasmCode ? "" : "disabled-link"} title="Run: CTRL + Return" onClick={this.runHarness.bind(this)}>Run <i className="fa fa-play-circle fa-lg" aria-hidden="true"></i></a>
-              </div>
-            </div>
-            <EditorComponent ref={(self: any) => this.mainEditor = self} name="main" mode="ace/mode/c_cpp" showGutter={true} showLineNumbers={true} />
-          </div>
-          <div>
-            <div className="editorHeader"><span className="editorHeaderTitle">JS</span>
-              <div className="editorHeaderButtons">
-
-              </div>
-            </div>
-            <EditorComponent ref={(self: any) => this.harnessEditor = self} name="harness" mode="ace/mode/javascript" showGutter={true} showLineNumbers={true} />
-          </div>
+          {/* <i title="Share" onClick={this.share.bind(this)} className="fa fa-cloud-upload fa-lg" aria-hidden="true"></i> */}
         </div>
       </div>
       <div>
         <div className="gV2">
           <div>
             <div className="editorHeader">
-              <select title="Optimization Level" value={this.state.view} onChange={this.onViewChanged.bind(this)}>
+              <span className="editorHeaderTitle">
+                {/* 新增语言模式下拉框，注释的为源代码 */}
+                <select onChange={this.onLanguageModeChanged.bind(this)}>
+                  <option value="C">C</option>
+                  <option value="C++">C++</option>
+                </select>
+                {/* {this.state.isC ? "C" : "C++"} */}
+              </span>
+              <div className="editorHeaderButtons">
+                <a title="Build: CTRL + Shift + Return" onClick={this.build.bind(this)}>Build <i className={"fa fa-cog " + (this.state.isCompiling ? "fa-spin" : "") + " fa-lg"} aria-hidden="true"></i></a>{' '}
+                {/* 去掉Run按钮，注释的为源代码*/}
+                {/* <a className={this.wasmCode ? "" : "disabled-link"} title="Run: CTRL + Return" onClick={this.runHarness.bind(this)}>Run <i className="fa fa-play-circle fa-lg" aria-hidden="true"></i></a> */}
+              </div>
+            </div>
+            <EditorComponent ref={(self: any) => this.mainEditor = self} name="main" mode="ace/mode/c_cpp" showGutter={true} showLineNumbers={true} />
+          </div>
+          <div>
+            <div className="editorHeader">
+              Text Format
+              {/* Text Format改为静态文字，一下为源代码 */}
+              {/* <select title="Optimization Level" value={this.state.view} onChange={this.onViewChanged.bind(this)}>
                 <option value="wast">Text Format</option>
                 <option value="wasm">Code Buffer</option>
                 <option value="imports">Imports Template</option>
                 <option value="x86">Firefox x86</option>
                 <option value="x86-baseline">Firefox x86 Baseline</option>
-              </select>
+              </select> */}
               <div className="editorHeaderButtons">
                 {/*<a title="Assemble" onClick={this.assemble.bind(this)}>Assemble <i className="fa fa-download fa-lg" aria-hidden="true"></i></a>*/}
                 <a className={this.wasmCode ? "" : "disabled-link"} title="Download WebAssembly Text" onClick={this.download.bind(this, "wast")}>Wat <i className="fa fa-download fa-lg" aria-hidden="true"></i></a>{' '}
@@ -725,10 +730,15 @@ export class AppComponent extends React.Component<any, {
             </div>
             <EditorComponent ref={(self: any) => this.viewEditor = self} name="view" save={false} readOnly={true} fontSize={10} />
           </div>
+        </div>
+      </div>
+      <div>
+        <div className="gV">
           <div>
             <div className="editorHeader"><span className="editorHeaderTitle">Output</span>
               <div className="editorHeaderButtons">
-                <a title="Toggle Canvas" onClick={this.toggleCanvas.bind(this)}>Canvas <i className="fa fa-picture-o fa-lg" aria-hidden="true"></i></a>{' '}
+                {/* 去掉Canvas按钮，注释的为源代码 */}
+                {/* <a title="Toggle Canvas" onClick={this.toggleCanvas.bind(this)}>Canvas <i className="fa fa-picture-o fa-lg" aria-hidden="true"></i></a>{' '} */}
                 <a title="Clear Output: CTRL + Shift + K" onClick={this.clear.bind(this)}>Clear <i className="fa fa-close fa-lg" aria-hidden="true"></i></a>
               </div>
             </div>
